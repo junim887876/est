@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuralQuiz | Forense & Trabalho</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;600;700&family=Inter:wght@400;500;600&display=swap');
+
+        :root {
+            --bg: #000000;
+            --surface: rgba(28, 28, 30, 0.7);
+            --surface-hover: rgba(44, 44, 46, 0.9);
+            --text: #F5F5F7;
+            --text-sec: #86868B;
+            --accent: #0A84FF;
+            --success: #30D158;
+            --danger: #FF453A;
+            --warning: #FF9F0A;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at 50% 0%, #1a1a24 0%, #000000 80%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .app-container {
+            background: var(--surface);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        h1 { font-weight: 600; font-size: 1.8rem; letter-spacing: -0.5px; margin-bottom: 10px; text-align: center; }
+        p { color: var(--text-sec); font-size: 0.95rem; line-height: 1.5; text-align: center; margin-bottom: 25px; }
+
+        .selector-group { background: rgba(0,0,0,0.3); padding: 20px; border-radius: 16px; margin-bottom: 25px; border: 1px solid var(--glass-border); }
+        .selector-group label { display: block; margin-bottom: 10px; font-weight: 500; font-size: 0.95rem; color: var(--accent); }
+        select { width: 100%; padding: 15px; border-radius: 12px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid var(--glass-border); font-size: 1rem; outline: none; appearance: none; cursor: pointer; }
+        
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+        .b-facil { color: var(--success); background: rgba(48, 209, 88, 0.1); border: 1px solid rgba(48, 209, 88, 0.3); }
+        .b-medio { color: var(--warning); background: rgba(255, 159, 10, 0.1); border: 1px solid rgba(255, 159, 10, 0.3); }
+        .b-dificil { color: var(--danger); background: rgba(255, 69, 58, 0.1); border: 1px solid rgba(255, 69, 58, 0.3); }
+        .b-count { color: var(--accent); background: rgba(10, 132, 255, 0.1); }
+
+        .question-box { margin-bottom: 25px; }
+        .q-text { font-size: 1.25rem; font-weight: 500; line-height: 1.4; margin-bottom: 15px; }
+        
+        .btn-icon { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text); border-radius: 12px; padding: 10px 15px; font-size: 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; margin-bottom: 20px; }
+        .btn-icon:hover { background: rgba(255,255,255,0.1); }
+
+        .options-grid { display: flex; flex-direction: column; gap: 12px; }
+        .opt-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); color: var(--text); border-radius: 16px; padding: 18px; text-align: left; font-size: 1rem; line-height: 1.4; cursor: pointer; transition: 0.2s; }
+        .opt-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.3); }
+        .opt-btn.correct { background: rgba(48, 209, 88, 0.15) !important; border-color: var(--success); }
+        .opt-btn.wrong { background: rgba(255, 69, 58, 0.15) !important; border-color: var(--danger); opacity: 0.6; }
+        .opt-btn:disabled { cursor: default; }
+
+        .explanation-box { background: rgba(10, 132, 255, 0.1); border-left: 4px solid var(--accent); border-radius: 0 12px 12px 0; padding: 15px; margin-top: 20px; font-size: 0.95rem; line-height: 1.5; display: none; }
+
+        .btn-main { background: var(--accent); color: #fff; border: none; padding: 16px; width: 100%; border-radius: 16px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: 0.2s; margin-top: 20px; }
+        .btn-main:hover { background: #0071E3; }
+        
+        .progress-bar { height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 25px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: 0.4s ease; }
+
+        .hidden { display: none !important; }
+        .score-display { font-size: 3.5rem; font-weight: 700; color: var(--accent); text-align: center; margin: 10px 0; }
+        .history-badge { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center; margin-top: 15px; font-size: 0.9rem; }
+
+        @media (max-width: 480px) { .app-container { padding: 20px; border-radius: 20px; } .q-text { font-size: 1.15rem; } .opt-btn { padding: 15px; font-size: 0.95rem; } }
+    </style>
+</head>
+<body>
+
+    <div id="screen-start" class="app-container">
+        <h1>Neural<span style="color:var(--accent)">Quiz</span></h1>
+        <p>Motor cognitivo adaptativo. Nenhuma sessão é igual a outra.</p>
+        
+        <div class="selector-group">
+            <label for="q-amount">Carga Cognitiva (Qtd. de Questões):</label>
+            <select id="q-amount">
+                <option value="10">10 Questões (Treino Rápido)</option>
+                <option value="30" selected>30 Questões (Padrão)</option>
+                <option value="60">60 Questões (Simulado Intenso)</option>
+                <option value="all">Todas as Questões (Hardcore)</option>
+            </select>
+        </div>
+
+        <button class="btn-main" onclick="startSession()">Iniciar Simulação</button>
+    </div>
+
+    <div id="screen-quiz" class="app-container hidden">
+        <div class="progress-bar"><div id="progress" class="progress-fill"></div></div>
+        
+        <div class="header-bar">
+            <span id="badge-lvl" class="badge b-facil">FÁCIL</span>
+            <span id="badge-count" class="badge b-count">1/X</span>
+        </div>
+
+        <div class="question-box">
+            <button class="btn-icon" onclick="speakQuestion()">🔊 Ouvir</button>
+            <div class="q-text" id="q-text">Carregando...</div>
+        </div>
+
+        <div class="options-grid" id="options-box"></div>
+
+        <div id="explanation" class="explanation-box"></div>
+        <button id="btn-next" class="btn-main hidden" onclick="nextQuestion()">Avançar ➔</button>
+    </div>
+
+    <div id="screen-result" class="app-container hidden">
+        <h1>Laudo IA</h1>
+        <div class="score-display" id="final-score">0%</div>
+        <p style="margin-bottom: 5px;">Precisão Analítica da Sessão</p>
+        
+        <div class="history-badge" id="history-box"></div>
+
+        <div id="ai-report" style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px; font-size: 0.95rem; margin-top: 20px; color: var(--text-sec); line-height: 1.6;"></div>
+        
+        <button class="btn-main" onclick="location.reload()">Configurar Nova Bateria</button>
+    </div>
+
+    <script>
+        // BANCO DE DADOS MACIÇO COMPRIMIDO (Gerador de Mutações Base)
+        // Você pode expandir esse array o quanto quiser. A lógica suporta infinitas questões.
+        // Níveis (b): 1=Fácil, 2=Médio, 3=Difícil
+        const masterDB = [
+            {b:1, q:"A Odontologia do Trabalho surgiu na Inglaterra (1900) para prevenir qual problema grave?", e:"Empresas notaram necrose nos maxilares devido ao uso de materiais perigosos como o fósforo.", o:[["Necrose da mandíbula pela manipulação de materiais perigosos.",1],["Cárie de radiação.",0],["Erosão ácida.",0],["Bruxismo ocupacional.",0]]},
+            {b:1, q:"Segundo Vanrell, a Identidade é o conjunto de caracteres físicos, funcionais e psíquicos. A identidade OBJETIVA é formada por elementos que são:", e:"Identidade objetiva precisa de elementos positivos (que existem) e perenes (que resistem ao tempo).", o:[["Positivos e perenes.",1],["Subjetivos e imutáveis.",0],["Temporários e genéticos.",0],["Exclusivamente odontológicos.",0]]},
+            {b:1, q:"Tecnopatias se diferenciam das Mesopatias pois:", e:"Tecnopatias são doenças profissionais inerentes à atividade em si. Mesopatias são causadas pelas condições do ambiente (doença do trabalho).", o:[["Tecnopatias são causadas pela peculiaridade da atividade; Mesopatias pelo ambiente.",1],["Tecnopatias são apenas acidentes de trajeto.",0],["Mesopatias afetam apenas a boca.",0],["Não há diferença jurídica.",0]]},
+            {b:2, q:"O que é a Metassimulação na infortunística?", e:"Ocorre quando a pessoa REALMENTE tem uma doença ou lesão, mas EXAGERA os sintomas propositalmente.", o:[["Exagerar as perturbações que o indivíduo realmente tem.",1],["Omitir doenças no exame admissional.",0],["Simular uma doença que não existe.",0],["Atribuir uma doença real a um acidente falso.",0]]},
+            {b:2, q:"Qual alteração bucal é clássica no Saturnismo (intoxicação por chumbo)?", e:"A orla gengival escura/azulada, conhecida como Linha de Burton, devido ao depósito de sulfeto de chumbo.", o:[["Linha de Burton (orla gengival escurecida).",1],["Bolsas periodontais sangrantes imediatas.",0],["Hiperplasia gengival severa.",0],["Erosão das faces palatinas.",0]]},
+            {b:3, q:"A fórmula do Índice de Flower para estimativa racial baseia-se em:", e:"Soma do comprimento mesiodistal de PM e M superiores multiplicada por 100, dividida pelo comprimento basinasal.", o:[["(Comprimento PM e M superiores x 100) / Comprimento basinasal.",1],["Largura bizigomática / Altura facial.",0],["Distância entre caninos / Profundidade do palato.",0],["Soma dos incisivos / Ramo da mandíbula.",0]]},
+            {b:3, q:"O método de Lamendin para estimativa de idade em adultos utiliza quais dois critérios principais da raiz dentária?", e:"Lamendin mede a altura da periodontose (retração gengival) e a altura da transparência radicular em relação à altura total da raiz.", o:[["Periodontose e Transparência radicular.",1],["Abrasão e Deposição de cemento.",0],["Rizólise e Volume pulpar.",0],["Cor da dentina e espessura do esmalte.",0]]},
+            {b:2, q:"Em craniometria para determinação de sexo, as eminências supra-orbitárias em homens são tipicamente:", e:"Nos homens, o rebordo acima dos olhos é proeminente e cortante. Nas mulheres, é liso e discreto.", o:[["Proeminentes e cortantes.",1],["Lisas e imperceptíveis.",0],["Idênticas às femininas.",0],["Inexistentes após a puberdade.",0]]},
+            {b:1, q:"A identificação pelo DNA e impressões digitais se baseia primariamente em qual princípio sinalético?", e:"Unicidade: cada indivíduo possui o seu, não existindo dois iguais no mundo.", o:[["Unicidade (ou Individualidade).",1],["Praticabilidade.",0],["Classificabilidade.",0],["Perenidade.",0]]},
+            {b:2, q:"Marcas de mordida com formato de largos retângulos são geralmente produzidas por quais dentes?", e:"Incisivos deixam marcas retangulares, enquanto caninos deixam marcas triangulares ou em estrela.", o:[["Incisivos.",1],["Caninos.",0],["Pré-molares.",0],["Molares.",0]]},
+            {b:3, q:"A técnica de dissecação de Luntz e Luntz (1973), usada no caso do Maníaco do Parque, serve para:", e:"Remover a pele com a marca de mordida sem causar distorções/retrações no tecido, colando um anel de acrílico antes de cortar.", o:[["Remover o tecido com a marca de mordida do cadáver sem distorcer a lesão.",1],["Extrair dentes carbonizados sem fraturar a raiz.",0],["Moldar o arco dentário do suspeito vivo.",0],["Realizar a descalcificação do dente para ver o ácido aspártico.",0]]},
+            {b:1, q:"A queiloscopia forense é o estudo focado em:", e:"Queiloscopia é o estudo das impressões (sulcos) labiais, que são únicas para cada pessoa.", o:[["Marcas dos sulcos labiais.",1],["Rugas do palato duro.",0],["Formatos do pavilhão auricular.",0],["Impressões papilares dos dedos.",0]]},
+            {b:2, q:"Pelo espectro de Legrand du Saulle, uma equimose de coloração amarelo-esverdeada indica uma lesão de aproximadamente:", e:"A evolução das cores da equimose permite datar a agressão. Amarelo-esverdeada tem em média de 6 a 10 dias.", o:[["6 a 10 dias.",1],["1 a 2 dias.",0],["Mais de 15 dias.",0],["3 a 4 semanas.",0]]},
+            {b:3, q:"O que estabelece a NR 04 sobre o SESMT?", e:"A NR 04 define o dimensionamento do Serviço Especializado em Engenharia de Segurança e Medicina do Trabalho com base no Grau de Risco e Número de Empregados.", o:[["O dimensionamento dos profissionais de saúde ocupacional baseado no Grau de Risco e Número de Empregados.",1],["A obrigatoriedade de pagamento de insalubridade máxima para dentistas.",0],["As regras estritas para aposentadoria especial.",0],["Os EPIs obrigatórios apenas para clínicas odontológicas.",0]]},
+            {b:2, q:"Qual o estigma bucal mais comum em trabalhadores de indústrias que emitem névoas de ácidos?", e:"A exposição crônica a gases e névoas ácidas causa erosão química severa no esmalte dentário, independente de bactérias.", o:[["Erosão do esmalte.",1],["Cáries cervicais rampantes.",0],["Pigmentação metálica na gengiva.",0],["Fraturas radiculares.",0]]},
+            {b:3, q:"Qual a diferença chave entre mordida animal e humana?", e:"Animais deixam arcos em formato de 'V' alongado, lesões perfurantes mais profundas (caninos) e NÃO deixam área central de sucção (equimose de lábios).", o:[["Animais deixam arco em formato de V, sem marcas de sucção central.",1],["Animais deixam marcas perfeitamente circulares com sucção.",0],["Humanos causam mais perfurações ósseas profundas.",0],["Mordidas humanas nunca geram equimose.",0]]},
+            {b:1, q:"Ocultar conscientemente uma doença crônica durante o exame admissional é um ato de:", e:"A dissimulação é a ocultação da doença, o que pode responsabilizar o empregador atual no futuro de forma injusta.", o:[["Dissimulação.",1],["Simulação.",0],["Metassimulação.",0],["Parassimulação.",0]]},
+            {b:2, q:"Para identificação do sexo pelo esqueleto, a bacia pélvica feminina possui o ângulo subpúbico:", e:"Nas mulheres o ângulo é mais aberto (em forma de U) e a bacia é mais larga internamente para facilitar o parto.", o:[["Aberto, em formato de 'U'.",1],["Fechado, em formato de 'V'.",0],["Estreito e verticalizado.",0],["Idêntico ao masculino até os 30 anos.",0]]},
+            {b:3, q:"O método da Racemização do Ácido Aspártico para estimativa de idade baseia-se em:", e:"Com o envelhecimento, o L-ácido aspártico presente nos tecidos dentários converte-se lentamente na forma D-ácido aspártico a uma taxa constante.", o:[["Conversão progressiva pós-natal do L-ácido aspártico para a forma D-ácido aspártico.",1],["Contagem das estrias de Retzius na dentina.",0],["Medição dos isótopos de Carbono-14 no esmalte.",0],["Degradação do colágeno tipo II no ligamento periodontal.",0]]},
+            {b:1, q:"A finalidade principal dos exames periódicos em saúde ocupacional é:", e:"Acompanhar a saúde do trabalhador ao longo do tempo para identificar precocemente agravos relacionados ao ambiente de trabalho.", o:[["Busca permanente da compatibilidade entre a atividade laboral e a saúde do trabalhador.",1],["Aumentar os custos das empresas com planos de saúde.",0],["Fornecer atestados sistemáticos para folgas.",0],["Garantir apenas o tratamento estético dos diretores.",0]]}
+            // Adicionei 20 matrizes de altíssima densidade. Como o algoritmo reembaralha e as opções mudam, isso gera mais de 8.000 permutações visuais.
+        ];
+
+        // LÓGICA DE ESTADO
+        let session = [];
+        let currIdx = 0;
+        let speechSynth = window.speechSynthesis;
+        let isAnswered = false;
+        let stats = { correct: 0, total: 0 };
+
+        // O SEGREDO DA ALEATORIEDADE PERFEITA: Algoritmo de Fisher-Yates
+        function fisherYates(array) {
+            let m = array.length, t, i;
+            while (m) {
+                i = Math.floor(Math.random() * m--);
+                t = array[m];
+                array[m] = array[i];
+                array[i] = t;
+            }
+            return array;
+        }
+
+        // INICIALIZAÇÃO
+        function startSession() {
+            let amountSelect = document.getElementById('q-amount').value;
+            let dbClone = JSON.parse(JSON.stringify(masterDB)); // Clona profundamente para não sujar o array base
+            
+            // 1. Embaralha as perguntas totais
+            dbClone = fisherYates(dbClone);
+
+            // 2. Corta na quantidade que o usuário pediu
+            let maxQ = amountSelect === 'all' ? dbClone.length : parseInt(amountSelect);
+            
+            // Se o usuário pediu 60 mas só tem 20, usa o limite máximo disponível
+            if(maxQ > dbClone.length) maxQ = dbClone.length; 
+            
+            session = dbClone.slice(0, maxQ);
+
+            // 3. Embaralha as alternativas de cada pergunta selecionada
+            session.forEach(q => fisherYates(q.o));
+
+            // Reseta variáveis
+            currIdx = 0;
+            stats.correct = 0;
+            stats.total = 0;
+            
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-quiz').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function getLevelStr(l) { return l===1?'FÁCIL':l===2?'MÉDIO':'DIFÍCIL'; }
+        function getLevelClass(l) { return l===1?'b-facil':l===2?'b-medio':'b-dificil'; }
+
+        function loadQuestion() {
+            if(currIdx >= session.length) return showResult();
+            
+            isAnswered = false;
+            let q = session[currIdx];
+            
+            document.getElementById('badge-count').innerText = `${currIdx+1} / ${session.length}`;
+            document.getElementById('badge-lvl').innerText = getLevelStr(q.b);
+            document.getElementById('badge-lvl').className = 'badge ' + getLevelClass(q.b);
+            document.getElementById('progress').style.width = `${(currIdx/session.length)*100}%`;
+            
+            document.getElementById('q-text').innerText = q.q;
+            document.getElementById('explanation').style.display = 'none';
+            document.getElementById('btn-next').classList.add('hidden');
+            
+            let box = document.getElementById('options-box');
+            box.innerHTML = '';
+            
+            q.o.forEach((opt, idx) => {
+                let btn = document.createElement('button');
+                btn.className = 'opt-btn';
+                btn.innerHTML = `<b>${String.fromCharCode(65+idx)})</b> ${opt[0]}`;
+                btn.onclick = () => checkAnswer(opt[1], btn, q.o, q.e);
+                box.appendChild(btn);
+            });
+        }
+
+        // TEXT-TO-SPEECH
+        function speakQuestion() {
+            if(!speechSynth) return;
+            speechSynth.cancel();
+            let q = session[currIdx];
+            let txt = q.q + ". Alternativas: ";
+            q.o.forEach((opt, idx) => { txt += `Letra ${String.fromCharCode(65+idx)}: ${opt[0]}. `; });
+            
+            let ut = new SpeechSynthesisUtterance(txt);
+            ut.lang = 'pt-BR';
+            ut.rate = 1.15;
+            speechSynth.speak(ut);
+        }
+
+        // VERIFICAÇÃO DE RESPOSTA
+        function checkAnswer(isCorrect, btn, options, explanation) {
+            if(isAnswered) return;
+            isAnswered = true;
+            speechSynth.cancel();
+            
+            stats.total++;
+            if(isCorrect) stats.correct++;
+
+            // Pinta os botões
+            let btns = document.getElementById('options-box').children;
+            for(let i=0; i<btns.length; i++) {
+                btns[i].disabled = true;
+                if(options[i][1] === 1) btns[i].classList.add('correct');
+            }
+            if(!isCorrect) btn.classList.add('wrong');
+
+            // Feedback Sonoro
+            if(isCorrect) { playTone(600, "sine"); playTone(800, "sine", 0.1); } 
+            else { playTone(200, "sawtooth"); playTone(150, "sawtooth", 0.2); }
+
+            // Explicação
+            let expBox = document.getElementById('explanation');
+            expBox.innerHTML = `<strong>${isCorrect ? '✅ Exato!' : '❌ Incorreto.'} Racional Crítico:</strong><br>${explanation}`;
+            expBox.style.display = 'block';
+            
+            document.getElementById('btn-next').classList.remove('hidden');
+
+            if(!isCorrect) {
+               let ut = new SpeechSynthesisUtterance("Atenção ao Racional: " + explanation);
+               ut.lang = 'pt-BR'; ut.rate = 1.2;
+               speechSynth.speak(ut);
+            }
+        }
+
+        function nextQuestion() {
+            speechSynth.cancel();
+            currIdx++;
+            loadQuestion();
+        }
+
+        // O SISTEMA "IA" LOCAL (Usando localStorage)
+        function showResult() {
+            document.getElementById('screen-quiz').classList.add('hidden');
+            document.getElementById('screen-result').classList.remove('hidden');
+            
+            let currentPct = Math.round((stats.correct / stats.total) * 100);
+            document.getElementById('final-score').innerText = currentPct + '%';
+            
+            // Busca o histórico do navegador (O pulo do gato!)
+            let lastScore = localStorage.getItem('NeuralOdontoLastScore');
+            let historyTxt = "";
+
+            if(lastScore) {
+                lastScore = parseInt(lastScore);
+                let diff = currentPct - lastScore;
+                if(diff > 0) {
+                    historyTxt = `📈 Você evoluiu <b>+${diff}%</b> em relação à sua última sessão! O algoritmo confirma retenção sólida.`;
+                } else if(diff < 0) {
+                    historyTxt = `📉 Queda de <b>${Math.abs(diff)}%</b> em relação ao seu último treino. A carga cognitiva pesou ou faltou atenção em NRs.`;
+                } else {
+                    historyTxt = `⚖️ Manutenção de precisão. Seu padrão de acerto estabilizou em ${currentPct}%.`;
+                }
+            } else {
+                historyTxt = `🧠 Perfil cognitivo base criado com sucesso. Retorne depois para ver sua curva de evolução.`;
+            }
+
+            // Salva o novo score
+            localStorage.setItem('NeuralOdontoLastScore', currentPct);
+            document.getElementById('history-box').innerHTML = historyTxt;
+
+            // Laudo geral
+            let txt = '';
+            if(currentPct >= 85) txt = "<b>Status: Especialista.</b> Dominância clara sobre métricas de Antropometria Forense e Legislações do Trabalho. Pronto para cenários complexos.";
+            else if(currentPct >= 60) txt = "<b>Status: Operacional.</b> Você absorveu o esqueleto teórico, mas o algoritmo de embaralhamento conseguiu te confundir em conceitos cruzados (como Mesopatia vs Tecnopatia).";
+            else txt = "<b>Status: Calibração Crítica.</b> Houve fadiga na tomada de decisão. Utilize a leitura da IA nas próximas vezes e foque nas explicações das caixas azuis.";
+            
+            document.getElementById('ai-report').innerHTML = txt;
+        }
+
+        // Beeper Sintetizador
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(freq, type, delay=0) {
+            setTimeout(()=>{
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = type; osc.frequency.value = freq;
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3); osc.stop(audioCtx.currentTime + 0.3);
+            }, delay*1000);
+        }
+    </script>
+</body>
+</html>
