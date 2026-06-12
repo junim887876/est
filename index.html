@@ -1,33 +1,178 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anúncio</title>
+    <title>Barbearia Junim - Painel de Vídeo</title>
     <style>
-        /* Remove as margens padrão e centraliza o vídeo na tela com fundo preto */
-        body {
+        body, html {
             margin: 0;
             padding: 0;
-            background-color: #000000;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #050505;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Container do vídeo ocupando a tela toda */
+        #video-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Para preencher a tela mantendo a proporção */
+        }
+
+        /* Container do contador no topo */
+        #top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 30px;
+            box-sizing: border-box;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+            color: white;
+            z-index: 10;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            transition: opacity 0.5s ease;
         }
-        
-        /* Garante que o vídeo seja responsivo e não ultrapasse o tamanho da tela */
-        video {
-            max-width: 100%;
-            max-height: 100vh;
-            outline: none;
+
+        .counter-box {
+            background: rgba(15, 15, 15, 0.7);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 15px 50px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .counter-number {
+            font-size: 5.5rem;
+            font-weight: 900;
+            margin: 0;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(255,255,255,0.3);
+        }
+
+        .counter-text {
+            font-size: 1.2rem;
+            margin: 5px 0 0 0;
+            color: #a3a3a3;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 600;
+        }
+
+        /* Classe para esconder a barra de topo no almoço */
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
 
-    <video src="anuncio.mp4" autoplay loop muted playsinline controls></video>
+    <div id="video-container">
+        <video id="main-video" autoplay loop muted playsinline>
+            <source src="anuncio.mp4" type="video/mp4">
+        </video>
+    </div>
 
+    <div id="top-bar">
+        <div class="counter-box">
+            <p class="counter-number" id="contador-clientes">--</p>
+            <p class="counter-text" id="texto-clientes">Carregando...</p>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================
+        // COLOQUE O LINK DO SEU GOOGLE APPS SCRIPT AQUI ABAIXO
+        // =========================================================
+        const SCRIPT_URL = "COLOQUE_SUA_URL_AQUI"; 
+        
+        const videoElement = document.getElementById('main-video');
+        const topBar = document.getElementById('top-bar');
+        const elContador = document.getElementById('contador-clientes');
+        const elTextoClientes = document.getElementById('texto-clientes');
+
+        let currentVideo = "anuncio.mp4"; 
+
+        // Função para trocar o vídeo e mostrar/esconder o topo
+        function switchState(videoSrc, hideTopBar) {
+            if (currentVideo !== videoSrc) {
+                currentVideo = videoSrc;
+                videoElement.src = videoSrc;
+                videoElement.play();
+            }
+
+            if (hideTopBar) {
+                topBar.classList.add('hidden');
+            } else {
+                topBar.classList.remove('hidden');
+            }
+        }
+
+        async function updateDashboard() {
+            try {
+                if (SCRIPT_URL === "COLOQUE_SUA_URL_AQUI") return; // Evita erro no console se a URL não for inserida
+
+                const response = await fetch(SCRIPT_URL);
+                if (!response.ok) throw new Error('Erro na rede');
+                
+                const dadosNuvem = await response.json();
+                
+                // Lógica de verificação do Almoço / Fechado (baseado na sua planilha)
+                // Adaptei pegando as strings padrão que você enviava antes ('lunch' ou 'closed')
+                if (dadosNuvem.qtd === 'lunch' || dadosNuvem.qtd === 'closed' || dadosNuvem.status === 'lunch') {
+                    // Toca almoco.mp4 fullscreen e esconde o contador
+                    switchState('almoco.mp4', true);
+                    return;
+                }
+
+                // Se estiver aberto, roda o anúncio e atualiza os clientes
+                const qtd = Number(dadosNuvem.qtd) || 0;
+                const txtQtd = String(qtd).padStart(2, '0');
+                
+                if (qtd === 0) {
+                    elTextoClientes.textContent = "Barbearia Vazia";
+                } else if (qtd === 1) {
+                    elTextoClientes.textContent = "Cliente Aguardando";
+                } else {
+                    elTextoClientes.textContent = "Clientes Aguardando";
+                }
+                
+                elContador.textContent = txtQtd;
+
+                // Garante que o vídeo de anúncios e a barra estejam visíveis
+                switchState('anuncio.mp4', false);
+
+            } catch (error) {
+                console.error("Erro ao buscar dados da planilha:", error);
+                // Em caso de falta de internet, mantém rodando o anúncio com o status vazio
+                elContador.textContent = "--";
+                elTextoClientes.textContent = "Desconectado";
+                switchState('anuncio.mp4', false);
+            }
+        }
+
+        // Faz a primeira checagem
+        updateDashboard();
+        
+        // Atualiza os dados a cada 5 segundos
+        setInterval(updateDashboard, 5000);
+    </script>
 </body>
 </html>
