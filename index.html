@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barbearia Junim - Painel de Vídeo</title>
+    <title>Barbearia Junim - Painel Vertical</title>
     <style>
         body, html {
             margin: 0;
@@ -11,72 +11,71 @@
             width: 100vw;
             height: 100vh;
             overflow: hidden;
-            background-color: #050505;
-            font-family: Arial, sans-serif;
+            background-color: #000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        /* Container do vídeo ocupando a tela toda */
         #video-container {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             z-index: 1;
         }
 
         video {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Para preencher a tela mantendo a proporção */
+            object-fit: cover; /* Garante o preenchimento perfeito na tela vertical */
+            object-position: center;
         }
 
-        /* Container do contador no topo */
+        /* Fixado no topo absoluto da tela vertical */
         #top-bar {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            padding: 30px;
+            padding: 5vh 20px 10vh 20px; /* Margem responsiva para TV vertical */
             box-sizing: border-box;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
-            color: white;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
             z-index: 10;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start; /* Trava no topo */
             transition: opacity 0.5s ease;
         }
 
         .counter-box {
-            background: rgba(15, 15, 15, 0.7);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 15px 50px;
+            background: rgba(20, 20, 20, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 20px 60px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
 
         .counter-number {
-            font-size: 5.5rem;
-            font-weight: 900;
+            font-size: 8rem; /* Tamanho ajustado para leitura à distância na TV */
+            font-weight: 800;
             margin: 0;
             line-height: 1;
-            text-shadow: 0 0 20px rgba(255,255,255,0.3);
+            color: #ffffff;
+            text-shadow: 0 0 30px rgba(255,255,255,0.2);
         }
 
         .counter-text {
-            font-size: 1.2rem;
-            margin: 5px 0 0 0;
-            color: #a3a3a3;
+            font-size: 1.5rem;
+            margin: 8px 0 0 0;
+            color: #8e8e93;
             text-transform: uppercase;
-            letter-spacing: 3px;
-            font-weight: 600;
+            letter-spacing: 4px;
+            font-weight: 500;
         }
 
-        /* Classe para esconder a barra de topo no almoço */
         .hidden {
             display: none !important;
         }
@@ -93,14 +92,11 @@
     <div id="top-bar">
         <div class="counter-box">
             <p class="counter-number" id="contador-clientes">--</p>
-            <p class="counter-text" id="texto-clientes">Carregando...</p>
+            <p class="counter-text" id="texto-clientes">Aguardando...</p>
         </div>
     </div>
 
     <script>
-        // =========================================================
-        // COLOQUE O LINK DO SEU GOOGLE APPS SCRIPT AQUI ABAIXO
-        // =========================================================
         const SCRIPT_URL = "COLOQUE_SUA_URL_AQUI"; 
         
         const videoElement = document.getElementById('main-video');
@@ -110,14 +106,12 @@
 
         let currentVideo = "anuncio.mp4"; 
 
-        // Função para trocar o vídeo e mostrar/esconder o topo
         function switchState(videoSrc, hideTopBar) {
             if (currentVideo !== videoSrc) {
                 currentVideo = videoSrc;
                 videoElement.src = videoSrc;
                 videoElement.play();
             }
-
             if (hideTopBar) {
                 topBar.classList.add('hidden');
             } else {
@@ -127,51 +121,35 @@
 
         async function updateDashboard() {
             try {
-                if (SCRIPT_URL === "COLOQUE_SUA_URL_AQUI") return; // Evita erro no console se a URL não for inserida
+                if (SCRIPT_URL === "COLOQUE_SUA_URL_AQUI") return;
 
                 const response = await fetch(SCRIPT_URL);
-                if (!response.ok) throw new Error('Erro na rede');
+                if (!response.ok) throw new Error('Network error');
                 
                 const dadosNuvem = await response.json();
                 
-                // Lógica de verificação do Almoço / Fechado (baseado na sua planilha)
-                // Adaptei pegando as strings padrão que você enviava antes ('lunch' ou 'closed')
                 if (dadosNuvem.qtd === 'lunch' || dadosNuvem.qtd === 'closed' || dadosNuvem.status === 'lunch') {
-                    // Toca almoco.mp4 fullscreen e esconde o contador
                     switchState('almoco.mp4', true);
                     return;
                 }
 
-                // Se estiver aberto, roda o anúncio e atualiza os clientes
                 const qtd = Number(dadosNuvem.qtd) || 0;
-                const txtQtd = String(qtd).padStart(2, '0');
+                elContador.textContent = String(qtd).padStart(2, '0');
                 
-                if (qtd === 0) {
-                    elTextoClientes.textContent = "Barbearia Vazia";
-                } else if (qtd === 1) {
-                    elTextoClientes.textContent = "Cliente Aguardando";
-                } else {
-                    elTextoClientes.textContent = "Clientes Aguardando";
-                }
+                if (qtd === 0) elTextoClientes.textContent = "Barbearia Vazia";
+                else if (qtd === 1) elTextoClientes.textContent = "Cliente na Fila";
+                else elTextoClientes.textContent = "Clientes na Fila";
                 
-                elContador.textContent = txtQtd;
-
-                // Garante que o vídeo de anúncios e a barra estejam visíveis
                 switchState('anuncio.mp4', false);
 
             } catch (error) {
-                console.error("Erro ao buscar dados da planilha:", error);
-                // Em caso de falta de internet, mantém rodando o anúncio com o status vazio
                 elContador.textContent = "--";
-                elTextoClientes.textContent = "Desconectado";
+                elTextoClientes.textContent = "Offline";
                 switchState('anuncio.mp4', false);
             }
         }
 
-        // Faz a primeira checagem
         updateDashboard();
-        
-        // Atualiza os dados a cada 5 segundos
         setInterval(updateDashboard, 5000);
     </script>
 </body>
