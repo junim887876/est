@@ -5,27 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vídeo Tela Cheia</title>
     <style>
-        html, body {
+        /* Reset rigoroso para eliminar qualquer margem invisível do navegador */
+        * {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #000;
+            box-sizing: border-box;
         }
 
+        body {
+            background-color: #000;
+            overflow: hidden; /* Trava a tela para impedir barras de rolagem */
+        }
+
+        /* Configuração de engenharia para preenchimento absoluto */
         video {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            min-width: 100%;
-            min-height: 100%;
-            width: auto;
-            height: auto;
-            z-index: -100;
-            transform: translateX(-50%) translateY(-50%);
-            object-fit: cover;
-            pointer-events: none;
+            position: fixed; /* Fixa o vídeo no eixo zero da tela */
+            top: 0;
+            left: 0;
+            
+            /* vw = Viewport Width (Largura da Tela) / vh = Viewport Height (Altura da Tela) */
+            width: 100vw;  /* Força a ter exatamente 100% da largura da TV */
+            height: 100vh; /* Força a ter exatamente 100% da altura da TV */
+            
+            /* A regra de ouro: 'cover' calcula a proporção do vídeo contra a tela e dá zoom automático para não deixar faixas pretas e não esmagar a imagem */
+            object-fit: cover; 
+            
+            /* Remove a interação para agir como painel/outdoor */
+            pointer-events: none; 
         }
     </style>
 </head>
