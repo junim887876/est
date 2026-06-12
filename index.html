@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barbearia Junim - Painel Vertical</title>
+    <title>Barbearia Junim - Painel Lateral</title>
     <style>
         body, html {
             margin: 0;
@@ -27,24 +27,28 @@
         video {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Garante o preenchimento perfeito na tela vertical */
+            object-fit: cover;
             object-position: center;
         }
 
-        /* Fixado no topo absoluto da tela vertical */
-        #top-bar {
+        /* Gradiente escuro apenas na esquerda para dar contraste */
+        #left-bar {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            padding: 5vh 20px 10vh 20px; /* Margem responsiva para TV vertical */
-            box-sizing: border-box;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+            width: 30vw;
+            height: 100vh;
+            background: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
             z-index: 10;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* Trava no topo */
             transition: opacity 0.5s ease;
+        }
+
+        /* Posicionamento exato na esquerda e centralizado na vertical, DEITADO */
+        .counter-wrapper {
+            position: absolute;
+            left: 10vw; /* Ajuste aqui a distância da borda (topo da TV) */
+            top: 50%;
+            transform: translate(-50%, -50%) rotate(90deg); /* Altere para -90deg se precisar inverter */
         }
 
         .counter-box {
@@ -56,10 +60,11 @@
             padding: 20px 60px;
             text-align: center;
             box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            white-space: nowrap; /* Impede o texto de quebrar em duas linhas */
         }
 
         .counter-number {
-            font-size: 8rem; /* Tamanho ajustado para leitura à distância na TV */
+            font-size: 8rem;
             font-weight: 800;
             margin: 0;
             line-height: 1;
@@ -89,33 +94,36 @@
         </video>
     </div>
 
-    <div id="top-bar">
-        <div class="counter-box">
-            <p class="counter-number" id="contador-clientes">--</p>
-            <p class="counter-text" id="texto-clientes">Aguardando...</p>
+    <div id="left-bar">
+        <div class="counter-wrapper">
+            <div class="counter-box">
+                <p class="counter-number" id="contador-clientes">--</p>
+                <p class="counter-text" id="texto-clientes">Aguardando...</p>
+            </div>
         </div>
     </div>
 
     <script>
+        // Não esqueça de colar a URL do Apps Script aqui!
         const SCRIPT_URL = "COLOQUE_SUA_URL_AQUI"; 
         
         const videoElement = document.getElementById('main-video');
-        const topBar = document.getElementById('top-bar');
+        const leftBar = document.getElementById('left-bar');
         const elContador = document.getElementById('contador-clientes');
         const elTextoClientes = document.getElementById('texto-clientes');
 
         let currentVideo = "anuncio.mp4"; 
 
-        function switchState(videoSrc, hideTopBar) {
+        function switchState(videoSrc, hideBar) {
             if (currentVideo !== videoSrc) {
                 currentVideo = videoSrc;
                 videoElement.src = videoSrc;
                 videoElement.play();
             }
-            if (hideTopBar) {
-                topBar.classList.add('hidden');
+            if (hideBar) {
+                leftBar.classList.add('hidden');
             } else {
-                topBar.classList.remove('hidden');
+                leftBar.classList.remove('hidden');
             }
         }
 
