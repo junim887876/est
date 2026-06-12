@@ -1,128 +1,92 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barbearia Junim - Painel TV</title>
+    <title>Painel Barbearia Inteligente</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            background-color: #050505;
-            font-family: 'Inter', -apple-system, sans-serif;
-        }
-
-        #video-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 1;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-        }
-
-        #left-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 35vw;
-            height: 100vh;
-            background: linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%);
-            z-index: 10;
-            transition: opacity 0.5s ease;
-        }
-
-        .counter-wrapper {
-            position: absolute;
-            top: 280px; /* Distância exata do topo para caber a caixa deitada */
-            left: 20px; /* Grudado perfeitamente na esquerda */
-            transform: rotate(-90deg); /* Texto deitado */
-        }
-
-        .counter-box {
-            background: rgba(15, 15, 15, 0.75);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 2rem;
-            padding: 25px 80px;
-            text-align: center;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9);
-            white-space: nowrap;
-        }
-
-        .counter-number {
-            font-size: 8rem;
-            font-weight: 900;
-            margin: 0;
-            line-height: 1;
-            color: #ffffff;
-            text-shadow: 0 0 20px rgba(255,255,255,0.2);
-        }
-
-        .counter-text {
-            font-size: 1.5rem;
-            margin: 10px 0 0 0;
-            color: #a3a3a3;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            font-weight: 800;
-        }
-
-        .hidden {
-            display: none !important;
-        }
+        :root { --bg-top: #111; --amarelo: #FFC72C; --verde-promo: #2ecc71; --rotacao: -90deg; }
+        body { margin: 0; padding: 0; background-color: #000; font-family: 'Kanit', sans-serif; overflow: hidden; position: absolute; width: 100vh; height: 100vw; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(var(--rotacao)); transform-origin: center center; display: flex; flex-direction: column; transition: all 0.5s ease; }
+        .top-section { flex: 0 0 25%; background-color: var(--bg-top); display: flex; align-items: center; justify-content: center; border-bottom: 5px solid #333; transition: all 0.5s ease; position: relative; overflow: hidden; }
+        .top-section.escondido { flex: 0 0 0%; border: 0; opacity: 0; }
+        .top-section.ocioso { background-color: var(--verde-promo); animation: pulseBg 2s infinite; }
+        .top-section.ocioso .counter-number, .top-section.ocioso .icon-cut { display: none; }
+        .ocioso-msg { display: none; font-size: 3.5rem; color: #000; font-weight: 900; text-align: center; line-height: 1.1; text-transform: uppercase; }
+        .top-section.ocioso .ocioso-msg { display: block; }
+        @keyframes pulseBg { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+        .info-container { text-align: center; display: flex; align-items: center; gap: 40px; }
+        .icon-cut { font-size: 6rem; color: #555; }
+        .text-group { display: flex; flex-direction: column; align-items: flex-start; }
+        .counter-number { font-size: 10rem; font-weight: 900; color: var(--amarelo); line-height: 0.8; }
+        .counter-label { font-size: 2rem; color: #fff; text-transform: uppercase; letter-spacing: 2px; margin-top: 10px; }
+        .bottom-section { flex: 1; position: relative; background: #000; display: flex; justify-content: center; align-items: center; }
+        #player-video { width: 100%; height: 100%; display: block; object-fit: cover; }
+        .clock { position: absolute; bottom: 30px; right: 30px; background: rgba(0,0,0,0.5); color: white; padding: 10px 20px; border-radius: 10px; font-size: 1.5rem; font-weight: bold; z-index: 50; }
+        #ad-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; display: flex; justify-content: center; align-items: center; }
+        #ad-layer.active { opacity: 1; pointer-events: all; }
+        .ad-content { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .ad-content.show { display: block; }
+        .tag-inteligente { position: absolute; top: 20px; right: 20px; background: #FFC72C; color: black; padding: 10px 20px; font-weight: bold; font-size: 1.5rem; border-radius: 10px; z-index: 110; display: none; box-shadow: 0 0 20px rgba(255, 199, 44, 0.5); animation: slideIn 0.5s ease-out; }
+        
+        /* Estilo para Mensagem Extra */
+        .message-container { position: absolute; width: 100%; height: 100%; background: #000; display: none; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; z-index: 60; }
+        .message-text { color: var(--amarelo); font-size: 5rem; font-weight: 900; text-align: center; text-transform: uppercase; line-height: 1.2; text-shadow: 0 0 20px rgba(255,199,44,0.3); max-width: 90%; word-wrap: break-word; }
+        
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
     </style>
 </head>
 <body>
-
-    <div id="video-container">
-        <video id="main-video" autoplay loop muted playsinline>
-            <source src="anuncio.mp4" type="video/mp4">
-        </video>
-    </div>
-
-    <div id="left-bar">
-        <div class="counter-wrapper">
-            <div class="counter-box">
-                <p class="counter-number" id="contador-clientes">--</p>
-                <p class="counter-text" id="texto-clientes">Conectando...</p>
+    <div class="top-section" id="painel-status">
+        <div class="info-container">
+            <div class="icon-cut"><i class="fas fa-cut"></i></div>
+            <div class="text-group">
+                <div class="counter-number" id="active-cuts-count">0</div>
+                <div class="counter-label">Cortando Agora</div>
             </div>
         </div>
+        <div class="ocioso-msg">CADEIRA LIVRE!<br>CORTE AGORA<br>SEM FILA</div>
     </div>
-
-    <script>
-        const CSV_URL = "https://docs.google.com/spreadsheets/d/1J_zE2x7lo62wlzClB2nGBNAxCDGpj2G9TKgWgLnSOyU/export?format=csv"; 
+    <div class="bottom-section">
+        <video id="player-video" loop muted autoplay playsinline></video>
         
-        const videoElement = document.getElementById('main-video');
-        const leftBar = document.getElementById('left-bar');
-        const elContador = document.getElementById('contador-clientes');
-        const elTextoClientes = document.getElementById('texto-clientes');
+        <div class="message-container" id="extra-msg-box">
+            <div class="message-text" id="extra-msg-text"></div>
+        </div>
 
-        let currentVideo = "anuncio.mp4"; 
+        <div class="clock" id="relogio">00:00</div>
+        <div id="ad-layer">
+            <div class="tag-inteligente" id="smart-tag">🎯 OFERTA ESPECIAL</div>
+            <img id="ad-image" class="ad-content" src="" alt="Propaganda Imagem">
+            <video id="ad-video" class="ad-content" playsinline></video>
+        </div>
+    </div>
+    
+    <script>
+        const countElement = document.getElementById('active-cuts-count');
+        const painelStatus = document.getElementById('painel-status');
+        const mainVideo = document.getElementById('player-video'); 
+        const relogioDiv = document.getElementById('relogio');
 
-        function switchState(videoSrc, hideBar) {
-            if (currentVideo !== videoSrc) {
-                currentVideo = videoSrc;
-                videoElement.src = videoSrc;
-                videoElement.load(); 
-                videoElement.play().catch(e => console.log("Aguardando interação"));
-            }
-            if (hideBar) {
-                leftBar.classList.add('hidden');
-            } else {
-                leftBar.classList.remove('hidden');
-            }
+        const TEMPO_OCIOSO_LIMIT = 10 * 60 * 1000; // 10 minutos para ativar tela verde de Cadeira Livre
+        let modoAtual = '';
+        let timerOcioso = null;
+        let isOciosoAtivo = false;
+
+        const videoTrabalho = "anuncio.mp4"; 
+        const videoAlmoco = "almoco.mp4"; 
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/1J_zE2x7lo62wlzClB2nGBNAxCDGpj2G9TKgWgLnSOyU/export?format=csv";
+
+        window.onload = function() {
+            atualizarPainel();
+            setInterval(atualizarRelogio, 1000);
+            setInterval(atualizarPainel, 5000);
+        };
+
+        function atualizarRelogio() { 
+            document.getElementById('relogio').innerText = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}); 
         }
 
         async function fetchGoogleSheetsData() {
@@ -145,43 +109,47 @@
                     modo: (valores[0] || 'trabalho').toLowerCase(),
                     qtd: parseInt(valores[1]) || 0
                 };
-
             } catch (error) {
+                console.error("Erro ao ler planilha:", error);
                 return null;
             }
         }
 
-        async function updateDashboard() {
-            const dadosNuvem = await fetchGoogleSheetsData();
+        async function atualizarPainel() {
+            const data = await fetchGoogleSheetsData();
+            if (!data) return; 
 
-            if (!dadosNuvem) {
-                elContador.textContent = "--";
-                elTextoClientes.textContent = "Offline";
-                switchState('anuncio.mp4', false);
-                return;
+            // MODO E VIDEOS (Almoço / Fechado)
+            if (data.modo && data.modo !== modoAtual) {
+                modoAtual = data.modo;
+                const srcEsperado = (modoAtual === 'almoco' || modoAtual === 'fechado') ? videoAlmoco : videoTrabalho;
+                
+                if (mainVideo.getAttribute('src') !== srcEsperado) {
+                    mainVideo.src = srcEsperado;
+                    mainVideo.load();
+                    mainVideo.play().catch(e => console.log(e));
+                }
+                
+                // Esconde a barra superior se estiver no almoço
+                painelStatus.classList.toggle('escondido', (modoAtual === 'almoco' || modoAtual === 'fechado'));
             }
 
-            if (dadosNuvem.modo === 'almoco' || dadosNuvem.modo === 'fechado') {
-                switchState('almoco.mp4', true);
-                return;
-            }
+            // CONTADOR E MODO OCIOSO
+            const qtd = data.qtd || 0;
+            countElement.innerText = qtd;
 
-            const qtd = dadosNuvem.qtd;
-            elContador.textContent = String(qtd).padStart(2, '0');
-            
-            if (qtd === 0) {
-                elTextoClientes.textContent = "Barbearia Vazia";
-            } else if (qtd === 1) {
-                elTextoClientes.textContent = "Cliente Aguardando";
-            } else {
-                elTextoClientes.textContent = "Clientes Aguardando";
+            if (qtd === 0 && !isOciosoAtivo && !timerOcioso) {
+                timerOcioso = setTimeout(() => { 
+                    isOciosoAtivo = true; 
+                    painelStatus.classList.add('ocioso'); 
+                }, TEMPO_OCIOSO_LIMIT);
+            } else if (qtd > 0) {
+                if (timerOcioso) clearTimeout(timerOcioso); 
+                timerOcioso = null;
+                isOciosoAtivo = false; 
+                painelStatus.classList.remove('ocioso');
             }
-
-            switchState('anuncio.mp4', false);
         }
-
-        updateDashboard();
-        setInterval(updateDashboard, 5000);
     </script>
 </body>
 </html>
