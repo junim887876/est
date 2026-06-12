@@ -3,41 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vídeo Tela Cheia</title>
+    <title>Anúncio</title>
     <style>
-        /* Reset rigoroso para eliminar qualquer margem invisível do navegador */
-        * {
+        /* Remove as margens padrão e centraliza o vídeo na tela com fundo preto */
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            background-color: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
         }
-
-        body {
-            background-color: #000;
-            overflow: hidden; /* Trava a tela para impedir barras de rolagem */
-        }
-
-        /* Configuração de engenharia para preenchimento absoluto */
+        
+        /* Garante que o vídeo seja responsivo e não ultrapasse o tamanho da tela */
         video {
-            position: fixed; /* Fixa o vídeo no eixo zero da tela */
-            top: 0;
-            left: 0;
-            
-            /* vw = Viewport Width (Largura da Tela) / vh = Viewport Height (Altura da Tela) */
-            width: 100vw;  /* Força a ter exatamente 100% da largura da TV */
-            height: 100vh; /* Força a ter exatamente 100% da altura da TV */
-            
-            /* A regra de ouro: 'cover' calcula a proporção do vídeo contra a tela e dá zoom automático para não deixar faixas pretas e não esmagar a imagem */
-            object-fit: cover; 
-            
-            /* Remove a interação para agir como painel/outdoor */
-            pointer-events: none; 
+            max-width: 100%;
+            max-height: 100vh;
+            outline: none;
         }
     </style>
 </head>
 <body>
 
-    <video src="video-fundo.mp4" autoplay loop muted playsinline></video>
+    <video src="anuncio.mp4" autoplay loop muted playsinline controls></video>
 
 </body>
 </html>
