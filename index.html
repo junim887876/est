@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barbearia Junim - Painel Lateral</title>
+    <title>Barbearia Junim - Painel TV</title>
     <style>
         body, html {
             margin: 0;
@@ -11,8 +11,8 @@
             width: 100vw;
             height: 100vh;
             overflow: hidden;
-            background-color: #000;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #050505;
+            font-family: 'Inter', -apple-system, sans-serif;
         }
 
         #video-container {
@@ -31,54 +31,56 @@
             object-position: center;
         }
 
-        /* Gradiente escuro apenas na esquerda para dar contraste */
+        /* Barra escura na esquerda para contraste do contador */
         #left-bar {
             position: absolute;
             top: 0;
             left: 0;
-            width: 30vw;
+            width: 35vw;
             height: 100vh;
-            background: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+            background: linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
             z-index: 10;
             transition: opacity 0.5s ease;
         }
 
-        /* Posicionamento exato na esquerda e centralizado na vertical, DEITADO */
+        /* Container rotacionado na esquerda */
         .counter-wrapper {
             position: absolute;
-            left: 10vw; /* Ajuste aqui a distância da borda (topo da TV) */
+            left: 8vw; /* Distância da borda esquerda (topo da TV física) */
             top: 50%;
-            transform: translate(-50%, -50%) rotate(90deg); /* Altere para -90deg se precisar inverter */
+            /* Rotaciona para o texto ficar legível na TV vertical */
+            transform: translateY(-50%) rotate(90deg); 
+            transform-origin: center center;
         }
 
         .counter-box {
-            background: rgba(20, 20, 20, 0.65);
+            background: rgba(15, 15, 15, 0.75);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
-            padding: 20px 60px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 2rem;
+            padding: 25px 70px;
             text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            white-space: nowrap; /* Impede o texto de quebrar em duas linhas */
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            white-space: nowrap;
         }
 
         .counter-number {
             font-size: 8rem;
-            font-weight: 800;
+            font-weight: 900;
             margin: 0;
             line-height: 1;
             color: #ffffff;
-            text-shadow: 0 0 30px rgba(255,255,255,0.2);
+            text-shadow: 0 0 20px rgba(255,255,255,0.3);
         }
 
         .counter-text {
             font-size: 1.5rem;
-            margin: 8px 0 0 0;
-            color: #8e8e93;
+            margin: 10px 0 0 0;
+            color: #a3a3a3;
             text-transform: uppercase;
             letter-spacing: 4px;
-            font-weight: 500;
+            font-weight: 800;
         }
 
         .hidden {
@@ -98,14 +100,13 @@
         <div class="counter-wrapper">
             <div class="counter-box">
                 <p class="counter-number" id="contador-clientes">--</p>
-                <p class="counter-text" id="texto-clientes">Aguardando...</p>
+                <p class="counter-text" id="texto-clientes">Conectando...</p>
             </div>
         </div>
     </div>
 
     <script>
-        // Não esqueça de colar a URL do Apps Script aqui!
-        const SCRIPT_URL = "COLOQUE_SUA_URL_AQUI"; 
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/1J_zE2x7lo62wlzClB2nGBNAxCDGpj2G9TKgWgLnSOyU/export?format=csv"; 
         
         const videoElement = document.getElementById('main-video');
         const leftBar = document.getElementById('left-bar');
@@ -127,34 +128,87 @@
             }
         }
 
-        async function updateDashboard() {
+        // Regras de negócio originais do seu código
+        function checkBusinessRules() {
+            const now = new Date();
+            const day = now.getDay(); 
+            const hour = now.getHours();
+            const minutes = now.getMinutes();
+            const timeFloat = hour + (minutes / 60);
+
+            if (day === 0) return { status: 'SUNDAY' };
+            if (timeFloat < 9.5) return { status: 'CLOSED' };
+            if (day >= 1 && day <= 6 && timeFloat >= 20.0) return { status: 'CLOSED' };
+            
+            return { status: 'OPEN' };
+        }
+
+        // Leitura do CSV idêntica ao seu código original
+        async function fetchGoogleSheetsData() {
             try {
-                if (SCRIPT_URL === "COLOQUE_SUA_URL_AQUI") return;
+                const response = await fetch(`${CSV_URL}&t=${new Date().getTime()}`);
+                if (!response.ok) throw new Error("Erro na rede");
+                
+                const csvText = await response.text();
+                const linhas = csvText.split('\n')
+                    .map(l => l.trim())
+                    .filter(l => l.replace(/,/g, '').replace(/;/g, '').trim() !== ''); 
+                
+                if (linhas.length === 0) return null;
 
-                const response = await fetch(SCRIPT_URL);
-                if (!response.ok) throw new Error('Network error');
-                
-                const dadosNuvem = await response.json();
-                
-                if (dadosNuvem.qtd === 'lunch' || dadosNuvem.qtd === 'closed' || dadosNuvem.status === 'lunch') {
-                    switchState('almoco.mp4', true);
-                    return;
-                }
+                const linhaDados = linhas[0];
+                const separador = linhaDados.includes(';') ? ';' : ',';
+                let valores = linhaDados.split(separador).map(v => v ? v.replace(/^"|"$/g, '').trim() : '');
 
-                const qtd = Number(dadosNuvem.qtd) || 0;
-                elContador.textContent = String(qtd).padStart(2, '0');
-                
-                if (qtd === 0) elTextoClientes.textContent = "Barbearia Vazia";
-                else if (qtd === 1) elTextoClientes.textContent = "Cliente na Fila";
-                else elTextoClientes.textContent = "Clientes na Fila";
-                
-                switchState('anuncio.mp4', false);
+                return {
+                    modo: (valores[0] || 'trabalho').toLowerCase(),
+                    qtd: parseInt(valores[1]) || 0
+                };
 
             } catch (error) {
+                console.error("Erro ao ler planilha:", error);
+                return null;
+            }
+        }
+
+        async function updateDashboard() {
+            const rules = checkBusinessRules();
+
+            // Se for Domingo ou fora do horário, roda vídeo de almoço/fechado e esconde contador
+            if (rules.status === 'SUNDAY' || rules.status === 'CLOSED') {
+                switchState('almoco.mp4', true);
+                return;
+            }
+
+            const dadosNuvem = await fetchGoogleSheetsData();
+
+            // Sem internet
+            if (!dadosNuvem) {
                 elContador.textContent = "--";
                 elTextoClientes.textContent = "Offline";
                 switchState('anuncio.mp4', false);
+                return;
             }
+
+            // Modo Almoço setado na planilha
+            if (dadosNuvem.modo === 'almoco') {
+                switchState('almoco.mp4', true);
+                return;
+            }
+
+            // Barbearia Aberta e Rodando
+            const qtd = dadosNuvem.qtd;
+            elContador.textContent = String(qtd).padStart(2, '0');
+            
+            if (qtd === 0) {
+                elTextoClientes.textContent = "Barbearia Vazia";
+            } else if (qtd === 1) {
+                elTextoClientes.textContent = "Cliente Aguardando";
+            } else {
+                elTextoClientes.textContent = "Clientes Aguardando";
+            }
+
+            switchState('anuncio.mp4', false);
         }
 
         updateDashboard();
