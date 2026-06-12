@@ -140,7 +140,7 @@
 
             if (day === 0) return { status: 'SUNDAY' };
             if (timeFloat < 9.5) return { status: 'CLOSED' };
-            if (day >= 1 && day <= 6 && timeFloat >= 20.0) return { status: 'CLOSED' };
+            if (day >= 1 && day <= 6 && timeFloat >= 23.0) return { status: 'CLOSED' };
             
             return { status: 'OPEN' };
         }
