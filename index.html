@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barbearia Junim - Painel T</title>
+    <title>Barbearia Junim - Painel TV</title>
     <style>
         body, html {
             margin: 0;
@@ -15,7 +15,6 @@
             font-family: 'Inter', -apple-system, sans-serif;
         }
 
-        /* Vídeo ocupando 100% da tela, fixo no fundo (por baixo) */
         #video-container {
             position: absolute;
             top: 0;
@@ -28,32 +27,30 @@
         video {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Corta as margens necessárias para o vídeo preencher tudo */
+            object-fit: cover;
             object-position: center;
         }
 
-        /* Gradiente escuro colado na esquerda para destacar o contador */
         #left-bar {
             position: absolute;
             top: 0;
             left: 0;
-            width: 35vw;
+            width: 30vw;
             height: 100vh;
-            background: linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%);
+            background: linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
             z-index: 10;
             transition: opacity 0.5s ease;
         }
 
-        /* Painel FIXADO NO TOPO e NA ESQUERDA, com o texto deitado */
         .counter-wrapper {
             position: absolute;
-            top: 40px;  /* Grudado no topo (ajuste este valor se quiser mais margem) */
-            left: 40px; /* Grudado na esquerda */
-            
-            /* O ponto de rotação é o canto superior esquerdo. 
-               O translateX puxa a caixa de volta para o lugar certo após deitar */
-            transform-origin: top left;
-            transform: rotate(-90deg) translateX(-100%);
+            left: 5vw; 
+            top: 50%;
+            transform: translateY(-50%) rotate(-90deg); 
+            transform-origin: center center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .counter-box {
@@ -131,20 +128,6 @@
             }
         }
 
-        function checkBusinessRules() {
-            const now = new Date();
-            const day = now.getDay(); 
-            const hour = now.getHours();
-            const minutes = now.getMinutes();
-            const timeFloat = hour + (minutes / 60);
-
-            if (day === 0) return { status: 'SUNDAY' };
-            if (timeFloat < 9.5) return { status: 'CLOSED' };
-            if (day >= 1 && day <= 6 && timeFloat >= 23.0) return { status: 'CLOSED' };
-            
-            return { status: 'OPEN' };
-        }
-
         async function fetchGoogleSheetsData() {
             try {
                 const response = await fetch(`${CSV_URL}&t=${new Date().getTime()}`);
@@ -172,13 +155,6 @@
         }
 
         async function updateDashboard() {
-            const rules = checkBusinessRules();
-
-            if (rules.status === 'SUNDAY' || rules.status === 'CLOSED') {
-                switchState('almoco.mp4', true);
-                return;
-            }
-
             const dadosNuvem = await fetchGoogleSheetsData();
 
             if (!dadosNuvem) {
@@ -188,7 +164,8 @@
                 return;
             }
 
-            if (dadosNuvem.modo === 'almoco') {
+            // Controle total pela planilha
+            if (dadosNuvem.modo === 'almoco' || dadosNuvem.modo === 'fechado') {
                 switchState('almoco.mp4', true);
                 return;
             }
