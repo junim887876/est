@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,22 +35,19 @@
             position: absolute;
             top: 0;
             left: 0;
-            width: 30vw;
+            width: 35vw;
             height: 100vh;
-            background: linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+            background: linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%);
             z-index: 10;
             transition: opacity 0.5s ease;
         }
 
         .counter-wrapper {
             position: absolute;
-            left: 5vw; 
-            top: 50%;
-            transform: translateY(-50%) rotate(-90deg); 
-            transform-origin: center center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            top: 40px; 
+            left: 40px;
+            transform-origin: top left;
+            transform: rotate(-90deg) translateX(-100%);
         }
 
         .counter-box {
@@ -119,6 +116,7 @@
             if (currentVideo !== videoSrc) {
                 currentVideo = videoSrc;
                 videoElement.src = videoSrc;
+                videoElement.load(); 
                 videoElement.play().catch(e => console.log("Aguardando interação"));
             }
             if (hideBar) {
@@ -164,7 +162,6 @@
                 return;
             }
 
-            // Controle total pela planilha
             if (dadosNuvem.modo === 'almoco' || dadosNuvem.modo === 'fechado') {
                 switchState('almoco.mp4', true);
                 return;
