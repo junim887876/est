@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +15,7 @@
             font-family: 'Inter', -apple-system, sans-serif;
         }
 
-        /* Vídeo ocupando a tela toda, por baixo do contador */
+        /* Vídeo ocupando 100% da tela, fixo no fundo (por baixo) */
         #video-container {
             position: absolute;
             top: 0;
@@ -28,32 +28,32 @@
         video {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Corta o vídeo para preencher a tela inteira */
+            object-fit: cover; /* Corta as margens necessárias para o vídeo preencher tudo */
             object-position: center;
         }
 
-        /* Barra escura apenas na esquerda para dar leitura ao contador */
+        /* Gradiente escuro colado na esquerda para destacar o contador */
         #left-bar {
             position: absolute;
             top: 0;
             left: 0;
-            width: 30vw;
+            width: 35vw;
             height: 100vh;
-            background: linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+            background: linear-gradient(to right, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%);
             z-index: 10;
             transition: opacity 0.5s ease;
         }
 
-        /* Contador fixado na esquerda e com a rotação invertida para não ficar de ponta cabeça */
+        /* Painel FIXADO NO TOPO e NA ESQUERDA, com o texto deitado */
         .counter-wrapper {
             position: absolute;
-            left: 5vw; /* Grudado na margem esquerda */
-            top: 50%;
-            transform: translateY(-50%) rotate(-90deg); /* Invertido para desvirar */
-            transform-origin: center center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            top: 40px;  /* Grudado no topo (ajuste este valor se quiser mais margem) */
+            left: 40px; /* Grudado na esquerda */
+            
+            /* O ponto de rotação é o canto superior esquerdo. 
+               O translateX puxa a caixa de volta para o lugar certo após deitar */
+            transform-origin: top left;
+            transform: rotate(-90deg) translateX(-100%);
         }
 
         .counter-box {
