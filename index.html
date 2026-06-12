@@ -15,6 +15,7 @@
             font-family: 'Inter', -apple-system, sans-serif;
         }
 
+        /* Vídeo ocupando a tela toda, por baixo do contador */
         #video-container {
             position: absolute;
             top: 0;
@@ -27,30 +28,32 @@
         video {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: cover; /* Corta o vídeo para preencher a tela inteira */
             object-position: center;
         }
 
-        /* Barra escura na esquerda para contraste do contador */
+        /* Barra escura apenas na esquerda para dar leitura ao contador */
         #left-bar {
             position: absolute;
             top: 0;
             left: 0;
-            width: 35vw;
+            width: 30vw;
             height: 100vh;
             background: linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
             z-index: 10;
             transition: opacity 0.5s ease;
         }
 
-        /* Container rotacionado na esquerda */
+        /* Contador fixado na esquerda e com a rotação invertida para não ficar de ponta cabeça */
         .counter-wrapper {
             position: absolute;
-            left: 8vw; /* Distância da borda esquerda (topo da TV física) */
+            left: 5vw; /* Grudado na margem esquerda */
             top: 50%;
-            /* Rotaciona para o texto ficar legível na TV vertical */
-            transform: translateY(-50%) rotate(90deg); 
+            transform: translateY(-50%) rotate(-90deg); /* Invertido para desvirar */
             transform-origin: center center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .counter-box {
@@ -59,9 +62,9 @@
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 2rem;
-            padding: 25px 70px;
+            padding: 25px 80px;
             text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9);
             white-space: nowrap;
         }
 
@@ -71,7 +74,7 @@
             margin: 0;
             line-height: 1;
             color: #ffffff;
-            text-shadow: 0 0 20px rgba(255,255,255,0.3);
+            text-shadow: 0 0 20px rgba(255,255,255,0.2);
         }
 
         .counter-text {
@@ -119,7 +122,7 @@
             if (currentVideo !== videoSrc) {
                 currentVideo = videoSrc;
                 videoElement.src = videoSrc;
-                videoElement.play();
+                videoElement.play().catch(e => console.log("Aguardando interação"));
             }
             if (hideBar) {
                 leftBar.classList.add('hidden');
@@ -128,7 +131,6 @@
             }
         }
 
-        // Regras de negócio originais do seu código
         function checkBusinessRules() {
             const now = new Date();
             const day = now.getDay(); 
@@ -143,7 +145,6 @@
             return { status: 'OPEN' };
         }
 
-        // Leitura do CSV idêntica ao seu código original
         async function fetchGoogleSheetsData() {
             try {
                 const response = await fetch(`${CSV_URL}&t=${new Date().getTime()}`);
@@ -166,7 +167,6 @@
                 };
 
             } catch (error) {
-                console.error("Erro ao ler planilha:", error);
                 return null;
             }
         }
@@ -174,7 +174,6 @@
         async function updateDashboard() {
             const rules = checkBusinessRules();
 
-            // Se for Domingo ou fora do horário, roda vídeo de almoço/fechado e esconde contador
             if (rules.status === 'SUNDAY' || rules.status === 'CLOSED') {
                 switchState('almoco.mp4', true);
                 return;
@@ -182,7 +181,6 @@
 
             const dadosNuvem = await fetchGoogleSheetsData();
 
-            // Sem internet
             if (!dadosNuvem) {
                 elContador.textContent = "--";
                 elTextoClientes.textContent = "Offline";
@@ -190,13 +188,11 @@
                 return;
             }
 
-            // Modo Almoço setado na planilha
             if (dadosNuvem.modo === 'almoco') {
                 switchState('almoco.mp4', true);
                 return;
             }
 
-            // Barbearia Aberta e Rodando
             const qtd = dadosNuvem.qtd;
             elContador.textContent = String(qtd).padStart(2, '0');
             
