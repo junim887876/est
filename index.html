@@ -28,7 +28,6 @@
             font-family: 'Kanit', sans-serif;
         }
 
-        /* Container de Rotação */
         #app {
             position: absolute;
             top: 50%;
@@ -157,7 +156,6 @@
             gap: 10px;
         }
 
-        /* Indicador do Estado Off-line */
         .status-dot {
             width: 12px;
             height: 12px;
@@ -242,7 +240,6 @@
             word-wrap: break-word; 
         }
 
-        /* Overlay do Modo Sleep (Energy Saver) */
         #sleep-screen {
             position: absolute;
             top: 0;
@@ -297,16 +294,14 @@
             </div>
         </div>
 
-        <!-- Tela do Modo Noturno / Sleep -->
         <div id="sleep-screen">FORA DO HORÁRIO DE FUNCIONAMENTO</div>
     </div>
 
     <script>
-        // --- 1. REGISTRO DO SERVICE WORKER (OFF-LINE / ANTI-QUEDA) ---
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
-                .then(() => console.log('Service Worker Registrado com Sucesso'))
-                .catch(err => console.error('Erro ao registrar Service Worker:', err));
+                .then(() => console.log('Service Worker Registrado'))
+                .catch(err => console.error('Erro no Service Worker:', err));
         }
 
         const countElement = document.getElementById('active-cuts-count');
@@ -316,37 +311,26 @@
         const statusDot = document.getElementById('status-dot');
         const sleepScreen = document.getElementById('sleep-screen');
 
-        const TEMPO_OCIOSO_LIMIT = 10 * 60 * 1000; // 10 minutos
+        const TEMPO_OCIOSO_LIMIT = 10 * 60 * 1000;
         let modoAtual = '';
         let timerOcioso = null;
         let isOciosoAtivo = false;
-
-        // Configuração de Horários do Modo Noturno / Energy Saver (00h às 06h e Domingos)
-        const HORA_INICIO_SLEEP = 22; // 22:00
-        const HORA_FIM_SLEEP = 6;     // 06:00
 
         const videoTrabalho = "anuncio.mp4"; 
         const videoAlmoco = "almoco1.mp4"; 
         const CSV_URL = "https://docs.google.com/spreadsheets/d/1J_zE2x7lo62wlzClB2nGBNAxCDGpj2G9TKgWgLnSOyU/export?format=csv";
 
-        // --- 2. WATCHDOG SCRIPT (AUTO-HEALING ANTI-TRAVAMENTO) ---
+        // WATCHDOG (ANTI-TRAVAMENTO)
         let lastVideoTime = -1;
         let watchdogStuckCount = 0;
 
         function startWatchdog() {
             setInterval(() => {
-                // Se a tela não estiver em modo Sleep e o vídeo estiver travado no mesmo frame por 30s
                 if (sleepScreen.style.display !== 'flex') {
                     if (mainVideo.currentTime === lastVideoTime && !mainVideo.paused) {
                         watchdogStuckCount++;
-                        console.warn(`Watchdog: Vídeo parado detectado (${watchdogStuckCount}/3)`);
-                        
-                        // Tenta forçar o play novamente
                         mainVideo.play().catch(() => {});
-                        
-                        // Se atingir 3 falhas seguidas (30 segundos travado), reinicia a página
                         if (watchdogStuckCount >= 3) {
-                            console.error("Watchdog: Travamento fatal detectado. Reiniciando página...");
                             window.location.reload();
                         }
                     } else {
@@ -354,20 +338,40 @@
                         lastVideoTime = mainVideo.currentTime;
                     }
                 }
-            }, 10000); // Checa a cada 10 segundos
+            }, 10000);
         }
 
-        // --- 3. MODO NOTURNO / DESLIGAMENTO DE TELA (ENERGY SAVER) ---
+        // REGRAS DE HORÁRIO DETALHADAS E PRECISAS
         function verificarModoNoturno() {
             const agora = new Date();
-            const hora = agora.getHours();
-            const diaSemana = agora.getDay(); // 0 = Domingo
+            const diaSemana = agora.getDay(); // 0 = Domingo, 1 = Segunda ... 6 = Sábado
+            const minutosAtuais = agora.getHours() * 60 + agora.getMinutes(); // Converte hora atual em minutos do dia
 
-            // Ativa o Sleep se for Domingo ou se estiver entre 22h e 06h
-            const eDomingo = (diaSemana === 0);
-            const eHorarioNoite = (hora >= HORA_INICIO_SLEEP || hora < HORA_FIM_SLEEP);
+            let deveDesligar = false;
 
-            if (eDomingo || eHorarioNoite) {
+            if (diaSemana === 0) {
+                // Domingo: Desligado o dia todo
+                deveDesligar = true;
+            } else if (diaSemana >= 1 && diaSemana <= 5) {
+                // Segunda a Sexta: Ligar 08:30 (510 min) e Desligar 18:30 (1110 min)
+                const inicioSegSexta = 8 * 60 + 30;  // 510 minutos
+                const fimSegSexta = 18 * 60 + 30;    // 1110 minutos
+                
+                if (minutosAtuais < inicioSegSexta || minutosAtuais >= fimSegSexta) {
+                    deveDesligar = true;
+                }
+            } else if (diaSemana === 6) {
+                // Sábado: Ligar 08:30 (510 min) e Desligar 20:00 (1200 min)
+                const inicioSabado = 8 * 60 + 30;   // 510 minutos
+                const fimSabado = 20 * 60;          // 1200 minutos
+                
+                if (minutosAtuais < inicioSabado || minutosAtuais >= fimSabado) {
+                    deveDesligar = true;
+                }
+            }
+
+            // Aplica a tela preta e pausa o vídeo se for o caso
+            if (deveDesligar) {
                 if (sleepScreen.style.display !== 'flex') {
                     sleepScreen.style.display = 'flex';
                     mainVideo.pause();
@@ -381,13 +385,14 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            verificarModoNoturno();
             atualizarPainel();
             atualizarRelogio();
             startWatchdog();
             
             setInterval(atualizarRelogio, 1000);
             setInterval(atualizarPainel, 5000);
-            setInterval(verificarModoNoturno, 30000); // Avalia modo Noturno a cada 30 segundos
+            setInterval(verificarModoNoturno, 10000); // Valida horário a cada 10s
         });
 
         function atualizarRelogio() { 
@@ -414,7 +419,6 @@
                 const separador = linhaDados.includes(';') ? ';' : ',';
                 let valores = linhaDados.split(separador).map(v => v ? v.replace(/^"|"$/g, '').trim() : '');
 
-                // Atualiza o indicador visual de rede como ONLINE (Verde)
                 statusDot.classList.remove('offline');
 
                 return {
@@ -422,18 +426,17 @@
                     qtd: parseInt(valores[1], 10) || 0
                 };
             } catch (error) {
-                console.warn("Sem conexão com a planilha (Modo Off-line ativo):", error);
-                // Sinaliza visualmente no relógio como OFFLINE (Vermelho), mas mantém o painel rodando
                 statusDot.classList.add('offline');
                 return null;
             }
         }
 
         async function atualizarPainel() {
-            const data = await fetchGoogleSheetsData();
-            if (!data) return; // Mantém a última informação visível na tela em caso de queda de rede
+            if (sleepScreen.style.display === 'flex') return; // Se a tela estiver desligada, ignora atualização visual
 
-            // Troca de Vídeos (Almoço / Fechado / Trabalho)
+            const data = await fetchGoogleSheetsData();
+            if (!data) return; 
+
             if (data.modo && data.modo !== modoAtual) {
                 modoAtual = data.modo;
                 const srcEsperado = (modoAtual === 'almoco' || modoAtual === 'fechado') ? videoAlmoco : videoTrabalho;
@@ -447,7 +450,6 @@
                 painelStatus.classList.toggle('escondido', (modoAtual === 'almoco' || modoAtual === 'fechado'));
             }
 
-            // Contador de Fila & Modo Ocioso
             const qtd = data.qtd || 0;
             countElement.innerText = qtd;
 
